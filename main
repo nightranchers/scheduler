@@ -1,0 +1,101 @@
+#RSW Scheduler
+
+#Implement employee class
+class employee(object):
+    def __init__(self, lName, fName, initials, cic, certs):
+        """
+        initialize values for employee
+        
+        lName is (str) last name
+        fName is (str) first name
+        initials is (str) length 2
+        cic is (bool)
+        certs is (int)
+        """
+        self.lName = lName
+        self.fName = fName
+        self.initials = intials
+        self.cic = cic
+        self.certs = certs
+        #GOMER is employees signout time
+        self.gomer = None
+	
+#here we set the parameters for for the schedule
+#we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
+maxTOP = 105
+#we can set min time on position (minTOP) to 0:30 (30 minutes)
+minTOP = 30
+#we can set optimum time on position (opmTOP) to 1:00 (60 minutes)
+opmTOP = 60
+#we can set minimum breaks (minBreak) to be 0:15 (15 minutes)
+minBreak = 15
+#we won't set a maximum break time
+#we can set optimum break time (opmBreak) to be 0:30 (30 minutes)
+opmBreak = 30
+#we can set shove time (shove) to be 0:15 (15 minutes)
+#this is how long before the end of their shift an employee gets off position
+shove = 15
+
+#create class for the schedule
+class schedule(object):
+    def __init__(self, numCorePos, numAuxPos, close = False, slotLen = 15):
+    	"""
+        initialize schedule class
+        
+        corePOS is (int) number of core positions to fill
+        auxPOS is (int) number of ancillary positions to fill
+        close is (int) time facility closes in 24 hour local time.
+        	if it's a 24 hour facility, leave blank
+        slotLen is (int) number of minutes per time slot.  Default is 15m
+        """
+    	self.numCorePos = numCorePos
+        #this will be a list of corePos objects
+        self.corePos = []
+        self.numAuxPos = numAuxPos
+        #this will be a list of auxPos objects
+        self.auxPos = []
+        self.close = close
+        self.slotLen = slotLen
+        
+    def getCorePos(self):
+        return self.corePos
+    
+    def getAuxPos(self):
+        return self.auxPos
+    
+    def getClose(self):
+        return self.close
+    
+    def getSlotLen(self):
+        return self.slotLen
+        
+    #function makePos will create 2 lists of position objects
+    def makePos(self):
+        for pos in xrange(self.numCorePos):
+            corePos.append(position,"core")
+        for pos in xrange(self.numAuxPos):
+            auxPos.append(position,"aux")
+            
+
+#we can create an object class for each position so we can save its attributes
+class position(object):
+    def __init__(self, posType = None, posName = "No Name"):
+        """
+        initialize position object
+        we can create one of these for each position we want to schedule
+        
+        """
+        self.posType = posType
+        self.posName = posName
+        
+    def getPosName(self):
+        return self.posName
+        
+    def getPosType(self):
+        return self.posType
+        
+    def createPosType(self, posType = self.getPosType()):
+    	#NEED TO COMPLETE
+        #Take the posType and add eligible cert ratings able to work this position
+        
+#now we need to find all the combinations...
