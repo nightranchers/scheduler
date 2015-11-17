@@ -22,38 +22,46 @@ class employee(object):
         self.gomer = None
 	
 class facility(object):
-    def __init__(self, positions):
+    def __init__(self, positions, maxTOP = 105, minTOP = 30, opmTOP = 60,
+    minBreak = 15, opmBreak = 30, shove = 15, close = False):
         """
     	initialize values for facility object
+        here we set the facility parameters that will be used when making the schedule
         
-    	positions is type (list) of (str) names of positions in facility
+    	positions (list) of (position) objects in facility
+        maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
+	minTOP (int): we can set min time on position (minTOP) to 0:30 (30 minutes)
+	opmTOP (int): we can set optimum time on position (opmTOP) to 1:00 (60 minutes)
+	minBreak (int): we can set minimum breaks (minBreak) to be 0:15 (15 minutes)
+	we won't set a maximum break time
+	opmBreak(int): we can set optimum break time (opmBreak) to be 0:30 (30 minutes)
+	shove (int): we can set shove time (shove) to be 0:15 (15 minutes)
+	this is how long before the end of their shift an employee gets off position
+        close is (int, bool) time facility closes in 24 hour local time.
+        if 24hr facility leave blank, defaults to False    	
     	"""
-#here we set the parameters for for the schedule
-#we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
-maxTOP = 105
-#we can set min time on position (minTOP) to 0:30 (30 minutes)
-minTOP = 30
-#we can set optimum time on position (opmTOP) to 1:00 (60 minutes)
-opmTOP = 60
-#we can set minimum breaks (minBreak) to be 0:15 (15 minutes)
-minBreak = 15
-#we won't set a maximum break time
-#we can set optimum break time (opmBreak) to be 0:30 (30 minutes)
-opmBreak = 30
-#we can set shove time (shove) to be 0:15 (15 minutes)
-#this is how long before the end of their shift an employee gets off position
-shove = 15
+	self.positions = positions
+	self.maxTOP = maxTOP
+	self.minTOP = minTOP
+	self.opmTOP = opmTOP
+	self.minBreak = minBreak
+	self.opmBreak = opmBreak
+	self.shove = shove
+	self.close = close
+
+    def getClose(self):
+        return self.close    	
+
+
 
 #create class for the schedule
 class schedule(object):
-    def __init__(self, numCorePos, numAuxPos, close = False, slotLen = 15):
+    def __init__(self, numCorePos, numAuxPos, slotLen = 15):
     	"""
         initialize schedule class
         
         corePOS is (int) number of core positions to fill
         auxPOS is (int) number of ancillary positions to fill
-        close is (int) time facility closes in 24 hour local time.
-        	if it's a 24 hour facility, leave blank
         slotLen is (int) number of minutes per time slot.  Default is 15m
         """
     	self.numCorePos = numCorePos
@@ -70,9 +78,6 @@ class schedule(object):
     
     def getAuxPos(self):
         return self.auxPos
-    
-    def getClose(self):
-        return self.close
     
     def getSlotLen(self):
         return self.slotLen
@@ -114,9 +119,5 @@ class position(object):
     
     def getCombinedTo(self):
         return self.combinedTo
-        
-    def createPosType(self, posType = self.getPosType()):
-    	#NEED TO COMPLETE
-        #Take the posType and add eligible cert ratings able to work this position
         
 #now we need to find all the combinations...
