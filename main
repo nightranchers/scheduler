@@ -2,24 +2,32 @@
 
 #Implement employee class
 class employee(object):
-    def __init__(self, lName, fName, initials, cic, certs):
+    def __init__(self, lName, fName, initials, certs, cic = False):
         """
         initialize values for employee
         
         lName is (str) last name
         fName is (str) first name
         initials is (str) length 2
-        cic is (bool)
-        certs is (int)
+        certs is a (dict) with (str) keys of positions with (bool) values
+        	these are the positions employee is certified on
+        (OPTIONAL) cic is (bool), defaults to False
         """
         self.lName = lName
         self.fName = fName
         self.initials = intials
-        self.cic = cic
         self.certs = certs
+        self.cic = cic
         #GOMER is employees signout time
         self.gomer = None
 	
+class facility(object):
+    def __init__(self, positions):
+        """
+    	initialize values for facility object
+        
+    	positions is type (list) of (str) names of positions in facility
+    	"""
 #here we set the parameters for for the schedule
 #we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
 maxTOP = 105
@@ -84,15 +92,28 @@ class position(object):
         initialize position object
         we can create one of these for each position we want to schedule
         
+        posType is a (str), either "core" or "aux"
+        core means it never closes and should always be a top level position
+        aux means it may be opened with enough staffing
+        
+        posName is a (str), the name of the position
+        this is compared to employees ratings to see if they're eligible to work the position
         """
         self.posType = posType
         self.posName = posName
+        #initialize "combinedTo" to be None
+        #each position can be combined to another by setting "combinedTo" to the position object
+        #if "combinedTo" is None, this means it's the top level position
+        self.combinedTo = None
         
     def getPosName(self):
         return self.posName
         
     def getPosType(self):
         return self.posType
+    
+    def getCombinedTo(self):
+        return self.combinedTo
         
     def createPosType(self, posType = self.getPosType()):
     	#NEED TO COMPLETE
