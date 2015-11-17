@@ -22,35 +22,69 @@ class employee(object):
         self.gomer = None
 	
 class facility(object):
-    def __init__(self, positions, maxTOP = 105, minTOP = 30, opmTOP = 60,
-    minBreak = 15, opmBreak = 30, shove = 15, close = False):
-        """
-    	initialize values for facility object
-        here we set the facility parameters that will be used when making the schedule
+	def __init__(self, name, maxTOP = 105, minTOP = 30, opmTOP = 60,
+	minBreak = 15, opmBreak = 30, shove = 15, close = False):
+		"""
+		initialize values for facility object
+		here we set the facility parameters that will be used when making the schedule
         
-    	positions (list) of (position) objects in facility
-        maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
-	minTOP (int): we can set min time on position (minTOP) to 0:30 (30 minutes)
-	opmTOP (int): we can set optimum time on position (opmTOP) to 1:00 (60 minutes)
-	minBreak (int): we can set minimum breaks (minBreak) to be 0:15 (15 minutes)
-	we won't set a maximum break time
-	opmBreak(int): we can set optimum break time (opmBreak) to be 0:30 (30 minutes)
-	shove (int): we can set shove time (shove) to be 0:15 (15 minutes)
-	this is how long before the end of their shift an employee gets off position
-        close is (int, bool) time facility closes in 24 hour local time.
-        if 24hr facility leave blank, defaults to False    	
-    	"""
-	self.positions = positions
-	self.maxTOP = maxTOP
-	self.minTOP = minTOP
-	self.opmTOP = opmTOP
-	self.minBreak = minBreak
-	self.opmBreak = opmBreak
-	self.shove = shove
-	self.close = close
+		maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
+		minTOP (int): we can set min time on position (minTOP) to 0:30 (30 minutes)
+		opmTOP (int): we can set optimum time on position (opmTOP) to 1:00 (60 minutes)
+		minBreak (int): we can set minimum breaks (minBreak) to be 0:15 (15 minutes)
+		we won't set a maximum break time
+		opmBreak(int): we can set optimum break time (opmBreak) to be 0:30 (30 minutes)
+		shove (int): we can set shove time (shove) to be 0:15 (15 minutes)
+		this is how long before the end of their shift an employee gets off position
+		close (int, bool) is the time facility closes in 24 hour local time.
+        	if 24hr facility leave blank, defaults to False    	
+    		"""
+		self.name = name
+		self.maxTOP = maxTOP
+		self.minTOP = minTOP
+		self.opmTOP = opmTOP
+		self.minBreak = minBreak
+		self.opmBreak = opmBreak
+		self.shove = shove
+		self.close = close
+		
+        	#positions (list) of (position) objects in facility
+        	self.positions = []
+        	#employees (list) of (employee) objects in facility
+        	self.employees = []
 
-    def getClose(self):
-        return self.close    	
+	def getPositions(self):
+		return self.positions
+		
+	def getEmployees(self):
+		return self.employees
+    	
+	def getMaxTOP(self):
+		return self.maxTOP
+    	
+	def getMinTOP(self):
+		return self.minTOP
+    	
+	def getOpmTOP(self):
+		return self.opmTOP
+    	
+	def getMinBreak(self):
+		return self.minBreak
+    	
+	def getOpmBreak(self):
+		return self.opmBreak
+    	
+	def getShove(self):
+		return self.shove
+    
+	def getClose(self):
+		return self.close
+		
+	def addPosition(self, pos):
+		self.positions.append(pos)
+		
+	def addEmployee(self, person):
+		self.employees.append(person)
 
 
 
@@ -92,17 +126,20 @@ class schedule(object):
 
 #we can create an object class for each position so we can save its attributes
 class position(object):
-    def __init__(self, posType = None, posName = "No Name"):
+    def __init__(self, posType = None, posName = "No Name", posID = 'ID'):
         """
         initialize position object
         we can create one of these for each position we want to schedule
         
-        posType is a (str), either "core" or "aux"
+        posType (str) is either "core" or "aux"
         core means it never closes and should always be a top level position
         aux means it may be opened with enough staffing
         
-        posName is a (str), the name of the position
+        posName (str) is the name of the position
         this is compared to employees ratings to see if they're eligible to work the position
+        
+        posID (str) is the coded id of the position
+        e.g. East = EST, Local Control = LC
         """
         self.posType = posType
         self.posName = posName
@@ -116,8 +153,24 @@ class position(object):
         
     def getPosType(self):
         return self.posType
+        
+    def getPosID(self):
+    	return self.posID
     
     def getCombinedTo(self):
         return self.combinedTo
+        
+    def combineTo(self, pos):
+    	"""
+    	takes one argument (a position object) and sets position to have a "combined with" state with the position argument
+    	e.g. SOU is decombined and we want to combine it to EST; SOU.combineTo(EST) will set EST as the owner of SOU
+    	"""
+    	self.combinedTo = pos
+    	
+    def decombine(self):
+    	"""
+    	calling decombine will set "combined with" state to None
+    	"""
+    	self.combinedTo = None
         
 #now we need to find all the combinations...
