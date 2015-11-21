@@ -1,0 +1,20 @@
+class schedule(object):
+    def __init__(self, begin, end, slotSize):
+        """
+        take a beginning time and end time to create a dictionary with slots of size slotSize
+        
+        begin (int) is a 24hr 4 digit time e.g. 2359
+        end (int) is also a 24hr 4 digit time
+        slotSize (int) is the length in minutes you want each time slot to be
+        """
+        slot = begin
+        self.slots = {}
+        while slot < end:
+            if slot % 100 < 60:
+                self.slots[slot] = None
+                #slots with be filled with a position object, a list of employee objects, or a single employee object
+            else:
+                slot += 40
+                self.slots[slot] = None
+                #slots with be filled with a position object, a list of employee objects, or a single employee object
+            slot += slotSize
