@@ -27,7 +27,10 @@ class facility(object):
 		"""
 		initialize values for facility object
 		here we set the facility parameters that will be used when making the schedule
-        
+		
+		name (str): name of facility
+        	
+        	optional parameters:
 		maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
 		minTOP (int): we can set min time on position (minTOP) to 0:30 (30 minutes)
 		opmTOP (int): we can set optimum time on position (opmTOP) to 1:00 (60 minutes)
@@ -90,13 +93,14 @@ class facility(object):
 
 #create class for the schedule
 class schedule(object):
-    def __init__(self, numCorePos, numAuxPos, slotLen = 15):
+    def __init__(self, numCorePos, numAuxPos, slotLen = 15, closer = False):
     	"""
         initialize schedule class
         
         corePOS is (int) number of core positions to fill
         auxPOS is (int) number of ancillary positions to fill
         slotLen is (int) number of minutes per time slot.  Default is 15m
+        closer is (bool). Defaults to False. True means the employee will work up until close with no early shove.
         """
     	self.numCorePos = numCorePos
         #this will be a list of corePos objects
@@ -104,7 +108,7 @@ class schedule(object):
         self.numAuxPos = numAuxPos
         #this will be a list of auxPos objects
         self.auxPos = []
-        self.close = close
+        self.closer = closer
         self.slotLen = slotLen
         
     def getCorePos(self):
@@ -174,3 +178,27 @@ class position(object):
     	self.combinedTo = None
         
 #now we need to find all the combinations...
+
+#TEST CODE
+#COPY AND PASTE THESE POSITIONS: {"EST":True,"SOU":True,"WST":True,"FIN":True,"CICO":True,"ADDD":True,"LC":True,"GC":True,"FDCD":True,"CICT":True}
+
+#CREATE FACILITY
+RSW = facility("Fort Myers")
+
+#ADD EMPLOYEES
+RSW.addEmployee(employee("Brown","Ricky","RB",{"EST":True,"SOU":True,"WST":True,
+	"FIN":True,"CICO":True,"ADDD":True,"LC":True,"GC":True,"FDCD":True,"CICT":True}),cic=True)
+RSW.addEmployee(employee("Costa","Ross","RC",{"EST":True,"SOU":True,"WST":True,
+	"FIN":True,"CICO":True,"ADDD":True,"LC":True,"GC":True,"FDCD":True,"CICT":True}))
+RSW.addEmployee(employee("Thompson","Sertan","SN",{"EST":False,"SOU":False,"WST":False,
+	"FIN":False,"CICO":False,"ADDD":True,"LC":True,"GC":True,"FDCD":True,"CICT":True}))
+RSW.addEmployee(employee("Brunner","Lisa","LB",{"EST":True,"SOU":True,"WST":True,
+	"FIN":True,"CICO":False,"ADDD":True,"LC":True,"GC":True,"FDCD":True,"CICT":True}))
+RSW.addEmployee(employee("Hire","New","NH",{"EST":False,"SOU":False,"WST":False,
+	"FIN":True,"False":True,"ADDD":False,"LC":False,"GC":False,"FDCD":False,"CICT":False}))
+
+#ADD POSITIONS
+positions = ["EST","SOU","WST","FIN","CICO","CICT","ADDD","LC","GC","FDCD"]
+for pos in positions:
+	RSW.addPosition(position(posID = pos))
+
