@@ -21,6 +21,7 @@ class employee(object):
         #GOMER is employees signout time
         self.gomer = None
 	
+#implement facility class
 class facility(object):
     def __init__(self, name, maxTOP = 105, minTOP = 30, opmTOP = 60,
 	minBreak = 15, opmBreak = 30, shove = 15, close = False):
