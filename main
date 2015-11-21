@@ -22,72 +22,72 @@ class employee(object):
         self.gomer = None
 	
 class facility(object):
-	def __init__(self, name, maxTOP = 105, minTOP = 30, opmTOP = 60,
+    def __init__(self, name, maxTOP = 105, minTOP = 30, opmTOP = 60,
 	minBreak = 15, opmBreak = 30, shove = 15, close = False):
-		"""
-		initialize values for facility object
-		here we set the facility parameters that will be used when making the schedule
+	"""
+	initialize values for facility object
+	here we set the facility parameters that will be used when making the schedule
+	
+	name (str): name of facility
+        
+        optional parameters:
+	maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
+	minTOP (int): we can set min time on position (minTOP) to 0:30 (30 minutes)
+	opmTOP (int): we can set optimum time on position (opmTOP) to 1:00 (60 minutes)
+	minBreak (int): we can set minimum breaks (minBreak) to be 0:15 (15 minutes)
+	we won't set a maximum break time
+	opmBreak(int): we can set optimum break time (opmBreak) to be 0:30 (30 minutes)
+	shove (int): we can set shove time (shove) to be 0:15 (15 minutes)
+	this is how long before the end of their shift an employee gets off position
+	close (int, bool) is the time facility closes in 24 hour local time.
+        if 24hr facility leave blank, defaults to False    	
+    	"""
+	self.name = name
+	self.maxTOP = maxTOP
+	self.minTOP = minTOP
+	self.opmTOP = opmTOP
+	self.minBreak = minBreak
+	self.opmBreak = opmBreak
+	self.shove = shove
+	self.close = close
+	
+        #positions (list) of (position) objects in facility
+        self.positions = []
+        #employees (list) of (employee) objects in facility
+        self.employees = []
+	
+    def getPositions(self):
+	return self.positions
 		
-		name (str): name of facility
-        	
-        	optional parameters:
-		maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
-		minTOP (int): we can set min time on position (minTOP) to 0:30 (30 minutes)
-		opmTOP (int): we can set optimum time on position (opmTOP) to 1:00 (60 minutes)
-		minBreak (int): we can set minimum breaks (minBreak) to be 0:15 (15 minutes)
-		we won't set a maximum break time
-		opmBreak(int): we can set optimum break time (opmBreak) to be 0:30 (30 minutes)
-		shove (int): we can set shove time (shove) to be 0:15 (15 minutes)
-		this is how long before the end of their shift an employee gets off position
-		close (int, bool) is the time facility closes in 24 hour local time.
-        	if 24hr facility leave blank, defaults to False    	
-    		"""
-		self.name = name
-		self.maxTOP = maxTOP
-		self.minTOP = minTOP
-		self.opmTOP = opmTOP
-		self.minBreak = minBreak
-		self.opmBreak = opmBreak
-		self.shove = shove
-		self.close = close
-		
-        	#positions (list) of (position) objects in facility
-        	self.positions = []
-        	#employees (list) of (employee) objects in facility
-        	self.employees = []
-
-	def getPositions(self):
-		return self.positions
-		
-	def getEmployees(self):
-		return self.employees
+    def getEmployees(self):
+	return self.employees
     	
-	def getMaxTOP(self):
-		return self.maxTOP
+    def getMaxTOP(self):
+	return self.maxTOP
     	
-	def getMinTOP(self):
-		return self.minTOP
+    def getMinTOP(self):
+	return self.minTOP
     	
-	def getOpmTOP(self):
-		return self.opmTOP
+    def getOpmTOP(self):
+	return self.opmTOP
+   	
+    def getMinBreak(self):
+	return self.minBreak
     	
-	def getMinBreak(self):
-		return self.minBreak
+    def getOpmBreak(self):
+	return self.opmBreak
     	
-	def getOpmBreak(self):
-		return self.opmBreak
-    	
-	def getShove(self):
-		return self.shove
+    def getShove(self):
+	return self.shove
     
-	def getClose(self):
-		return self.close
+    def getClose(self):
+	return self.close
 		
-	def addPosition(self, pos):
-		self.positions.append(pos)
+    def addPosition(self, pos):
+	self.positions.append(pos)
 		
-	def addEmployee(self, person):
-		self.employees.append(person)
+    def addEmployee(self, person):
+	self.employees.append(person)
 
 
 
@@ -201,4 +201,3 @@ RSW.addEmployee(employee("Hire","New","NH",{"EST":False,"SOU":False,"WST":False,
 positions = ["EST","SOU","WST","FIN","CICO","CICT","ADDD","LC","GC","FDCD"]
 for pos in positions:
 	RSW.addPosition(position(posID = pos))
-
