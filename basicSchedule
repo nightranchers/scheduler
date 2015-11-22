@@ -1,0 +1,94 @@
+#Implement employee class
+class employee(object):
+    def __init__(self, name):
+        """
+        initialize values for employee
+        
+        name (str) is name of employee
+        """
+        self.name = name
+
+#we can create an object class for each position so we can save its attributes
+class position(object):
+    def __init__(self, posID = 'ID'):
+        """
+        initialize position object
+        we can create one of these for each position we want to schedule
+        
+        posID (str) is the coded id of the position
+        e.g. East = EST, Local Control = LC
+        """
+        self.posID = posID
+        
+#create class for the schedule
+class schedule(object):
+    def __init__(self, begin, end, slotSize = 15):
+        """
+        take a beginning time and end time to create a dictionary with slots of size slotSize
+        
+        begin (int) is a 24hr 4 digit time e.g. 2359
+        end (int) is also a 24hr 4 digit time
+        slotSize (int) is the length in minutes you want each time slot to be
+        """
+        slot = begin
+        #we're creating a dictionary of slots for keys and objects for values
+        #we also create a list of the slot times
+        self.slots = {}
+        self.slotList = []
+        while slot < end:
+            if slot % 100 < 60:
+                self.slots[slot] = None
+                self.slotList.append(slot)
+                #slots with be filled with a position object, a list of employee objects, or a single employee object
+            else:
+                slot += 40
+                self.slots[slot] = None
+                self.slotList.append(slot)
+                #slots with be filled with a position object, a list of employee objects, or a single employee object
+            slot += slotSize
+
+#implement facility class
+class facility(object):
+    def __init__(self, name, maxTOP = 105):
+		"""
+		initialize values for facility object
+		here we set the facility parameters that will be used when making the schedule
+	
+		name (str): name of facility
+        
+        optional parameters:
+		maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
+    	"""
+		self.name = name
+		self.maxTOP = maxTOP
+	
+        #positions (list) of (position) objects in facility
+        self.positions = []
+        #employees (list) of (employee) objects in facility
+        self.employees = []
+        #create dictionary of lists of employees on break (schedule object) 
+        #create dictionary of lists of employees on position (schedule object)
+        self.onBreak = schedule(1800,2400)
+        self.onPos = schedule(1800,2400)
+    
+    def addPosition(self, pos):
+		self.positions.append(pos)
+		
+    def addEmployee(self, person):
+		self.employees.append(person)
+        
+##### TEST CODE #####
+RSW = facility("Fort Myers")
+
+RSW.addEmployee(employee("Ricky"))
+RSW.addEmployee(employee("Noe"))
+RSW.addEmployee(employee("Ross"))
+RSW.addEmployee(employee("Cashdollar"))
+RSW.addEmployee(employee("Mo"))
+RSW.addEmployee(employee("Spanky"))
+
+RSW.addPosition(position("A"))
+RSW.addPosition(position("B"))
+
+RSW.
+
