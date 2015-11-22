@@ -8,13 +8,18 @@ class schedule(object):
         slotSize (int) is the length in minutes you want each time slot to be
         """
         slot = begin
+        #we're creating a dictionary of slots for keys and objects for values
+        #we also create a list of the slot times
         self.slots = {}
+        self.slotList = []
         while slot < end:
             if slot % 100 < 60:
                 self.slots[slot] = None
+                self.slotList.append(slot)
                 #slots with be filled with a position object, a list of employee objects, or a single employee object
             else:
                 slot += 40
                 self.slots[slot] = None
+                self.slotList.append(slot)
                 #slots with be filled with a position object, a list of employee objects, or a single employee object
             slot += slotSize
