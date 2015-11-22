@@ -1,3 +1,5 @@
+import random
+
 #Implement employee class
 class employee(object):
     def __init__(self, name):
@@ -7,6 +9,11 @@ class employee(object):
         name (str) is name of employee
         """
         self.name = name
+        #we'll keep track of the last position employee worked to try and keep variety
+        self.lastPosition = None
+
+	def __str__(self):
+		return self.name
 
 #we can create an object class for each position so we can save its attributes
 class position(object):
@@ -19,6 +26,14 @@ class position(object):
         e.g. East = EST, Local Control = LC
         """
         self.posID = posID
+        self.assignments = schedule(1800,2400)
+        
+    def __str__(self):
+    	return self.posID
+    	
+    ##### WORK IN PROGRESS #####
+    def assignWorker(self, person, slot):
+    	self.assignments.addSomething(slot, person)
         
 #create class for the schedule
 class schedule(object):
@@ -46,6 +61,9 @@ class schedule(object):
                 self.slotList.append(slot)
                 #slots with be filled with a position object, a list of employee objects, or a single employee object
             slot += slotSize
+            
+    def addSomething(self, slot, something):
+    	self.slots[slot] = something
 
 #implement facility class
 class facility(object):
@@ -62,12 +80,12 @@ class facility(object):
 		self.name = name
 		self.maxTOP = maxTOP
 	
-        #positions (list) of (position) objects in facility
-        self.positions = []
-        #employees (list) of (employee) objects in facility
-        self.employees = []
-        #create dictionary of lists of employees on break (schedule object) 
-        #create dictionary of lists of employees on position (schedule object)
+    	#positions (list) of (position) objects in facility
+    	self.positions = []
+    	#employees (list) of (employee) objects in facility
+    	self.employees = []
+    	#create dictionary of lists of employees on break (schedule object) 
+    	#create dictionary of lists of employees on position (schedule object)
         self.onBreak = schedule(1800,2400)
         self.onPos = schedule(1800,2400)
     
@@ -76,6 +94,13 @@ class facility(object):
 		
     def addEmployee(self, person):
 		self.employees.append(person)
+		
+	##### WORK IN PROGRESS #####
+	def makeSomeoneWork(self):
+		lucky = random.choice(self.employees)
+		TOP = 0
+		while TOP <= self.maxTOP:
+			
         
 ##### TEST CODE #####
 RSW = facility("Fort Myers")
@@ -90,5 +115,5 @@ RSW.addEmployee(employee("Spanky"))
 RSW.addPosition(position("A"))
 RSW.addPosition(position("B"))
 
-RSW.
+
 
