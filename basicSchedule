@@ -14,6 +14,9 @@ class employee(object):
 
 	def __str__(self):
 		return self.name
+		
+	def getLastPos(self):
+		return self.lastPosition
 
 #we can create an object class for each position so we can save its attributes
 class position(object):
@@ -32,8 +35,14 @@ class position(object):
     	return self.posID
     	
     ##### WORK IN PROGRESS #####
-    def assignWorker(self, person, slot):
+    def assignWorker(self, slot, person):
     	self.assignments.addSomething(slot, person)
+    	
+    def getSlotList(self):
+    	return self.assignments.getSlotList()
+    	
+    def getSlotSize(self):
+    	return self.assignments.getSlotSize()
         
 #create class for the schedule
 class schedule(object):
@@ -45,6 +54,7 @@ class schedule(object):
         end (int) is also a 24hr 4 digit time
         slotSize (int) is the length in minutes you want each time slot to be
         """
+        self.slotSize = slotSize
         slot = begin
         #we're creating a dictionary of slots for keys and objects for values
         #we also create a list of the slot times
@@ -64,6 +74,12 @@ class schedule(object):
             
     def addSomething(self, slot, something):
     	self.slots[slot] = something
+    	
+    def getSlotList(self):
+    	return self.slotList
+    	
+    def getSlotSize(self):
+    	return self.slotSize
 
 #implement facility class
 class facility(object):
@@ -97,10 +113,23 @@ class facility(object):
 		
 	##### WORK IN PROGRESS #####
 	def makeSomeoneWork(self):
+		#randomly pick a lucky worker to assign a position
 		lucky = random.choice(self.employees)
+		
+		#list of positions minus the last position employee worked
+		options = self.positions[:]
+		if type(lucky.getLastPos()) == position:
+			options.remove(lucky.getLastPos())
+		
+		#randomly pick a position from the remaining positions
+		pos = random.choice(options)
+		
+		#start assigning worker to position
 		TOP = 0
+		slotList = pos.getSlotList()[:]
 		while TOP <= self.maxTOP:
-			
+			pos.assignWorker(slotList.pop(),lucky)
+			TOP += pos.getSlotSize()
         
 ##### TEST CODE #####
 RSW = facility("Fort Myers")
