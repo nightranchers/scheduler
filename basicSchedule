@@ -1,51 +1,61 @@
 import random
 
-#Implement employee class
-class employee(object):
+#Implement Employee class
+class Employee(object):
     def __init__(self, name):
         """
-        initialize values for employee
+        initialize values for Employee
         
         name (str) is name of employee
         """
         self.name = name
+        self.initials = name ##### WERE DOING THIS FOR SIMPLICITY's SAKE!!! CHANGE LATER!!! #####
         #we'll keep track of the last position employee worked to try and keep variety
         self.lastPosition = None
 
-	def __str__(self):
-		return self.name
+    def __str__(self):
+        return self.name
+        
+    def getInitials(self):
+        return self.initials
 		
-	def getLastPos(self):
-		return self.lastPosition
+    def getLastPos(self):
+        return self.lastPosition
+        
+    def setLastPos(self, lastPos):
+        self.lastPosition = lastPos
 
 #we can create an object class for each position so we can save its attributes
-class position(object):
+class Position(object):
     def __init__(self, posID = 'ID'):
         """
-        initialize position object
+        initialize Position object
         we can create one of these for each position we want to schedule
         
         posID (str) is the coded id of the position
         e.g. East = EST, Local Control = LC
         """
         self.posID = posID
-        self.assignments = schedule(1800,2400)
+        self.schedule = Schedule(1800,2400)
         
     def __str__(self):
     	return self.posID
     	
+    def getPosID(self):
+        return self.posID
+    	
     ##### WORK IN PROGRESS #####
     def assignWorker(self, slot, person):
-    	self.assignments.addSomething(slot, person)
+    	self.schedule.addSomething(slot, person)
     	
     def getSlotList(self):
-    	return self.assignments.getSlotList()
+    	return self.schedule.getSlotList()
     	
     def getSlotSize(self):
-    	return self.assignments.getSlotSize()
+    	return self.schedule.getSlotSize()
         
 #create class for the schedule
-class schedule(object):
+class Schedule(object):
     def __init__(self, begin, end, slotSize = 15):
         """
         take a beginning time and end time to create a dictionary with slots of size slotSize
@@ -64,12 +74,12 @@ class schedule(object):
             if slot % 100 < 60:
                 self.slots[slot] = None
                 self.slotList.append(slot)
-                #slots with be filled with a position object, a list of employee objects, or a single employee object
+                #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
             else:
                 slot += 40
                 self.slots[slot] = None
                 self.slotList.append(slot)
-                #slots with be filled with a position object, a list of employee objects, or a single employee object
+                #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
             slot += slotSize
             
     def addSomething(self, slot, something):
@@ -81,68 +91,76 @@ class schedule(object):
     def getSlotSize(self):
     	return self.slotSize
 
-#implement facility class
-class facility(object):
+#implement Facility class
+class Facility(object):
     def __init__(self, name, maxTOP = 105):
-		"""
-		initialize values for facility object
-		here we set the facility parameters that will be used when making the schedule
-	
-		name (str): name of facility
-        
-        optional parameters:
-		maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
+	    """
+	    initialize values for Facility object
+	    here we set the facility parameters that will be used when making the schedule
+    
+	    name (str): name of facility
+	    
+	    optional parameters...
+	    maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
     	"""
-		self.name = name
-		self.maxTOP = maxTOP
+	    self.name = name
+	    self.maxTOP = maxTOP
 	
-    	#positions (list) of (position) objects in facility
-    	self.positions = []
-    	#employees (list) of (employee) objects in facility
-    	self.employees = []
-    	#create dictionary of lists of employees on break (schedule object) 
-    	#create dictionary of lists of employees on position (schedule object)
-        self.onBreak = schedule(1800,2400)
-        self.onPos = schedule(1800,2400)
+    	#positionList (list) of (Position) objects in facility
+    	#postions (dict) of posID's for keys assigned to (Position) values
+    	self.positionList = []
+    	self.positions = {}
+    	
+    	#employeeList (list) of (Employee) objects in facility
+    	#employees (dict) of employee initials for keys assigned to (Employee) values
+    	self.employeeList = []
+    	self.employees = {}
+    	
+    	#create dictionary of lists of employees on break (Schedule object) 
+    	#create dictionary of lists of employees on position (Schedule object)
+        self.onBreak = Schedule(1800,2400)
+        self.onPos = Schedule(1800,2400)
     
     def addPosition(self, pos):
-		self.positions.append(pos)
+        self.positionList.append(pos)
+        self.positions[pos.getPosID()] = pos
 		
     def addEmployee(self, person):
-		self.employees.append(person)
+        self.employeeList.append(person)
+        self.employees[person.getInitials()] = person
 		
-	##### WORK IN PROGRESS #####
-	def makeSomeoneWork(self):
-		#randomly pick a lucky worker to assign a position
-		lucky = random.choice(self.employees)
-		
-		#list of positions minus the last position employee worked
-		options = self.positions[:]
-		if type(lucky.getLastPos()) == position:
-			options.remove(lucky.getLastPos())
-		
-		#randomly pick a position from the remaining positions
-		pos = random.choice(options)
-		
-		#start assigning worker to position
-		TOP = 0
-		slotList = pos.getSlotList()[:]
-		while TOP <= self.maxTOP:
-			pos.assignWorker(slotList.pop(),lucky)
-			TOP += pos.getSlotSize()
+    ##### WORK IN PROGRESS #####
+    def makeSomeoneWork(self):
+	#randomly pick a lucky worker to assign a position
+	lucky = random.choice(self.employeeList)
+	
+	#list of positions minus the last position employee worked
+	options = self.positionList[:]
+	if type(lucky.getLastPos()) == Position:
+	    options.remove(lucky.getLastPos())
+	
+	#randomly pick a position from the remaining positions
+	pos = random.choice(options)
+	
+	#start assigning worker to position
+	TOP = 0
+	slotList = pos.getSlotList()[:]
+	while TOP <= self.maxTOP:
+            pos.assignWorker(slotList.pop(),lucky)
+            TOP += pos.getSlotSize()
+        lucky.setLastPos(pos)
+        print lucky ##### TEST CODE. REMOVE FOR PRODUCTION #####
+        print pos ##### TEST CODE. REMOVE FOR PRODUCTION #####
         
 ##### TEST CODE #####
-RSW = facility("Fort Myers")
+RSW = Facility("Fort Myers")
 
-RSW.addEmployee(employee("Ricky"))
-RSW.addEmployee(employee("Noe"))
-RSW.addEmployee(employee("Ross"))
-RSW.addEmployee(employee("Cashdollar"))
-RSW.addEmployee(employee("Mo"))
-RSW.addEmployee(employee("Spanky"))
+RSW.addEmployee(Employee("Ricky"))
+RSW.addEmployee(Employee("Noe"))
+RSW.addEmployee(Employee("Ross"))
+RSW.addEmployee(Employee("Cashdollar"))
+RSW.addEmployee(Employee("Mo"))
+RSW.addEmployee(Employee("Spanky"))
 
-RSW.addPosition(position("A"))
-RSW.addPosition(position("B"))
-
-
-
+RSW.addPosition(Position("A"))
+RSW.addPosition(Position("B"))
