@@ -2,28 +2,44 @@ import random
 
 #Implement Employee class
 class Employee(object):
-    def __init__(self, name):
+    def __init__(self, name, EOS):
         """
         initialize values for Employee
         
         name (str) is name of employee
+        EOS (int) is employees End Of Shift time in 24hr local time (eg.2330)
         """
         self.name = name
         self.initials = name ##### WERE DOING THIS FOR SIMPLICITY's SAKE!!! CHANGE LATER!!! #####
+        self.EOS = EOS
         #we'll keep track of the last position employee worked to try and keep variety
         self.lastPosition = None
+        #TOP is Time On Position. Not to exceed user defined MaxTOP
+        self.TOP = 0
 
     def __str__(self):
         return self.name
         
     def getInitials(self):
         return self.initials
+        
+    def getEOS(self):
+        return self.EOS
 		
     def getLastPos(self):
         return self.lastPosition
         
     def setLastPos(self, lastPos):
         self.lastPosition = lastPos
+        
+    def setTOPplus1(self, slotSize):
+        self.TOP += slotSize
+        
+    def resetTOP(self):
+        self.TOP = 0
+        
+    def getTOP(self):
+        return self.TOP
 
 #we can create an object class for each position so we can save its attributes
 class Position(object):
@@ -36,7 +52,7 @@ class Position(object):
         e.g. East = EST, Local Control = LC
         """
         self.posID = posID
-        self.schedule = Schedule(1800,2400)
+        self.schedule = Schedule(1800,2400,"obj")
         
     def __str__(self):
     	return self.posID
@@ -48,20 +64,27 @@ class Position(object):
     def assignWorker(self, slot, person):
     	self.schedule.addSomething(slot, person)
     	
+    def checkSlot(self, slot):
+        return self.schedule.checkSlot(slot, Employee)
+    	
     def getSlotList(self):
     	return self.schedule.getSlotList()
     	
     def getSlotSize(self):
     	return self.schedule.getSlotSize()
+    	
+    def whoIsWorking(self, slot):
+        return self.schedule.getSlot(slot)
         
 #create class for the schedule
 class Schedule(object):
-    def __init__(self, begin, end, slotSize = 15):
+    def __init__(self, begin, end, contents, slotSize = 15):
         """
         take a beginning time and end time to create a dictionary with slots of size slotSize
         
         begin (int) is a 24hr 4 digit time e.g. 2359
         end (int) is also a 24hr 4 digit time
+        contents (string) ("obj" or "list") is the type of content we intend to store in each slot
         slotSize (int) is the length in minutes you want each time slot to be
         """
         self.slotSize = slotSize
@@ -71,13 +94,29 @@ class Schedule(object):
         self.slots = {}
         self.slotList = []
         while slot < end:
+            #we're formatting for time here
             if slot % 100 < 60:
-                self.slots[slot] = None
+                #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
+                if contents == "obj":
+                    self.slots[slot] = None
+                elif contents == "list":
+                    self.slots[slot] = []
+                else:
+                    raise Exception(contents)
                 self.slotList.append(slot)
-                #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
+            #if the minutes is more than 60, add 40 to bring it to the next hour
             else:
                 slot += 40
-                self.slots[slot] = None
+                #if the hour adjustment brings us past the end point, exit the loop
+                if slot >= end:
+                    break
+                #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
+                if contents == "obj":
+                    self.slots[slot] = None
+                elif contents == "list":
+                    self.slots[slot] = []
+                else:
+                    raise Exception(contents)
                 self.slotList.append(slot)
                 #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
             slot += slotSize
@@ -85,26 +124,42 @@ class Schedule(object):
     def addSomething(self, slot, something):
     	self.slots[slot] = something
     	
+    def checkSlot(self, slot, thing):
+        if type(self.slots[slot]) == thing:
+            return True
+        else:
+            return False
+    	
     def getSlotList(self):
     	return self.slotList
     	
+    def getSlot(self, slot):
+        return self.slots[slot]
+    	
     def getSlotSize(self):
     	return self.slotSize
+    	
+    def getNumSlots(self):
+        return len(self.slots)
 
 #implement Facility class
 class Facility(object):
-    def __init__(self, name, maxTOP = 105):
-	    """
-	    initialize values for Facility object
-	    here we set the facility parameters that will be used when making the schedule
-    
-	    name (str): name of facility
-	    
-	    optional parameters...
-	    maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
+    def __init__(self, name, start=1800, end=2400, maxTOP = 105):
+	"""
+	initialize values for Facility object
+	here we set the facility parameters that will be used when making the schedule
+
+	name (str): name of facility
+       
+        optional parameters...
+        start (int): this is the 24hr local time we want to begin creating the schedule
+        end (int): this is the 24hr local time we want to stop creating the schedule
+        maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
     	"""
-	    self.name = name
-	    self.maxTOP = maxTOP
+	self.name = name
+	self.start = start
+	self.end = end
+        self.maxTOP = maxTOP
 	
     	#positionList (list) of (Position) objects in facility
     	#postions (dict) of posID's for keys assigned to (Position) values
@@ -118,8 +173,8 @@ class Facility(object):
     	
     	#create dictionary of lists of employees on break (Schedule object) 
     	#create dictionary of lists of employees on position (Schedule object)
-        self.onBreak = Schedule(1800,2400)
-        self.onPos = Schedule(1800,2400)
+        self.onBreak = Schedule(self.start,self.end, "list")
+        self.onPos = Schedule(self.start,self.end, "list")
     
     def addPosition(self, pos):
         self.positionList.append(pos)
@@ -128,6 +183,54 @@ class Facility(object):
     def addEmployee(self, person):
         self.employeeList.append(person)
         self.employees[person.getInitials()] = person
+        
+    def getNumSlots(self):
+        return self.onBreak.getNumSlots()
+        
+    def getSlotList(self):
+        return self.onBreak.getSlotList()
+        
+    def getPositionList(self):
+        return self.positionList
+        
+    def buildBreakList(self):
+        #iterate through every employee
+        for employee in self.employeeList:
+            ######################### TEST CODE
+            print employee
+            #if the employee is a closer
+            if employee.getEOS() == self.end:
+                #start him at the beginning and fill every slot until close
+                for slot in self.onBreak.getSlotList():
+                    ######################### TEST CODE
+                    print slot
+                    #retrieve slot contents, add the employee to the break list, send it back
+                    breakList = self.onBreak.getSlot(slot)[:]
+                    breakList.append(employee)
+                    self.onBreak.addSomething(slot, breakList)
+            #if the employee is not a closer
+            elif employee.getEOS() < self.end:
+                #iterate over every slot
+                for slot in self.onBreak.getSlotList():
+                    ######################### TEST CODE
+                    print slot
+                    #assign employee to break list while the slot is less than the employees end of shift
+                    if slot < employee.getEOS():
+                        #retrieve slot contents, add the employee to the break list, send it back
+                        breakList = self.onBreak.getSlot(slot)[:]
+                        breakList.append(employee)
+                        self.onBreak.addSomething(slot, breakList)
+                        #we tried consolidating to one line of code but was unsuccessful
+                        #self.onBreak.addSomething(slot, self.onBreak.getSlot(slot)[:].append(employee))
+                    #once we get to the employees End Of Shift, stopp adding to break list
+                    else:
+                        break
+            #otherwise the employees End Of Shift is outside the parameters
+            else:
+                raise Exception("Employee EOF outside parameters")
+                        
+                    
+            
 		
     ##### WORK IN PROGRESS #####
     def makeSomeoneWork(self):
@@ -136,8 +239,8 @@ class Facility(object):
 	
 	#list of positions minus the last position employee worked
 	options = self.positionList[:]
-	if type(lucky.getLastPos()) == Position:
-	    options.remove(lucky.getLastPos())
+	if type(lucky.getLastPos()) == Position: #if last position is set...
+	    options.remove(lucky.getLastPos()) #remove that position from the position list
 	
 	#randomly pick a position from the remaining positions
 	pos = random.choice(options)
@@ -145,22 +248,71 @@ class Facility(object):
 	#start assigning worker to position
 	TOP = 0
 	slotList = pos.getSlotList()[:]
-	while TOP <= self.maxTOP:
+	while TOP < self.maxTOP:
             pos.assignWorker(slotList.pop(),lucky)
             TOP += pos.getSlotSize()
+            lucky.setTOPplus1(pos.getSlotSize())
         lucky.setLastPos(pos)
+        lucky.TOP
         print lucky ##### TEST CODE. REMOVE FOR PRODUCTION #####
         print pos ##### TEST CODE. REMOVE FOR PRODUCTION #####
         
+
 ##### TEST CODE #####
 RSW = Facility("Fort Myers")
 
-RSW.addEmployee(Employee("Ricky"))
-RSW.addEmployee(Employee("Noe"))
-RSW.addEmployee(Employee("Ross"))
-RSW.addEmployee(Employee("Cashdollar"))
-RSW.addEmployee(Employee("Mo"))
-RSW.addEmployee(Employee("Spanky"))
+RSW.addEmployee(Employee("RB", 2400))
+RSW.addEmployee(Employee("RC", 2400))
+RSW.addEmployee(Employee("MT", 2300))
+RSW.addEmployee(Employee("LB", 2130))
+RSW.addEmployee(Employee("CA", 2030))
+RSW.addEmployee(Employee("OL", 2030))
 
 RSW.addPosition(Position("A"))
 RSW.addPosition(Position("B"))
+
+#scheduler builder function (facility object with employees and positions, standardTOP = 4 slots (60 minutes)):
+def buildSchedule(facility, standardTOP = 60, slotSize = 15, maxTOP = 105):
+    #loop through x number slots starting with closing slot
+    slotList = facility.getSlotList()[:]
+    slotList.reverse()
+    for slot in slotList:
+        #when standardTOP becomes less than slots available, reduce standardTOP by 1
+	#loop through each position
+        for pos in facility.getPositionList():
+            #if slot for position is already set, skip
+            if pos.checkSlot(slot):
+                continue
+            #check pool for available employees
+            breakList = facility.onBreak.getSlot(slot)
+            #if none and it's the first slot
+            if len(breakList) < 1 and slot == facility.getSlotList()[-1]:
+                #throw exception
+                raise Exception("Not enough employees available to close")
+	    #if none
+	    elif len(breakList) < 1:
+	        #we need to extend the employee on position
+	        #get the index of the current slot, add 1, then retrieve that slot from the slot list
+	        employee = pos.whoIsWorking(pos.getSlotList()[pos.getSlotList().index(slot) + 1])
+	        #if employee is already at maxTOP throw exception
+                if employee.getTOP() >= maxTOP:
+                    raise Exception(employee.getInitials() + " has reached max Time On Position (maxTOP)")
+                #else extend assigned employee one slot
+                    #try
+                        #SAF(schedule, employee, starting slot, 1 slot)
+                #elif one
+                    #try
+                        #SAF(schedule, employee, starting slot, standardTOP) 
+		#elif more than one, check to see who hasn't worked
+                    #if one hasn't worked, assign him to the slot
+                    #elif more than one hasn't worked, pick one and assign him to the slot
+                    #else everyone's worked, check who's been on break the longest
+                        #if one, assign that person to the slot
+                        #if more than one are tied for longest, pick one and assign that person to the slot
+
+#SAF "slot assignment function" (schedule object, employee object, starting slot, numSlots):
+	#loop through schedule object slots beginning with starting slot for numSlots 
+		#check that this slot exists and is unoccupied else throw exception
+		#assign employee to the slot
+		
+#build schedule table to print
