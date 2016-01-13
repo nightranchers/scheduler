@@ -1,0 +1,31 @@
+import pandas
+
+"""
+Here's the format we're looking for
+
+		POS	POS
+SLOT	RB	MT
+SLOT	RB	MT
+SLOT	RB	MT
+SLOT	RB	MT
+
+So first column will be the slots
+the rest of the columns will be employee's initials assigned to the postion found at the top of the column
+
+each column needs to be formatted into a dictionary
+the heading is the key and the rest are values
+the slot times need to be in a list
+"""
+
+#initialize dictionary of position assignments
+posAssignments = {}
+#iterate over every position in the facility
+for pos in facility.getPositionList():
+	#create empty list for this position to fill
+	posAssignments[pos.getPosID()] = []
+	#iterate over every slot
+	for slot in facility.getSlotList():
+		#get the initials of the person working for each slot for each position
+		posAssignments[pos.getPosID()].append(pos.whoIsWorking(slot).getInitials())
+#use the pandas DataFrame method to create readable tabulated lists for print
+pandas.DataFrame(posAssignments, index=facility.getSlotList())
