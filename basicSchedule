@@ -61,7 +61,12 @@ class Position(object):
         return self.posID
     	
     ##### WORK IN PROGRESS #####
-    def assignWorker(self, slot, person):
+    def assignWorker(self, slot, person, numSlots = 1):
+    	"""
+    	slot (int) is the slot you wish to insert worker
+    	person (object) is the person you wish to assign to the slot
+    	numSlots (int) (default 1) is the amount of slots to fill beginning with slot
+    	"""
     	self.schedule.addSomething(slot, person)
     	
     def checkSlot(self, slot):
@@ -121,8 +126,21 @@ class Schedule(object):
                 #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
             slot += slotSize
             
-    def addSomething(self, slot, something):
-    	self.slots[slot] = something
+    def addSomething(self, slot, something, numSlots = 1):
+    	"""
+    	slot (int) is the slot you wish to insert worker
+    	something (anything) is whatever you want to insert into the slot. typically an Employee object or list of Employees
+    	numSlots (int) (default 1) is the amount of slots to fill beginning with slot
+    	"""
+    	if numSlots == 1:
+    		self.slots[slot] = something
+    	elif numSlots > 1:
+    		index = self.getSlotList().index(slot)
+    		slots = self.getSlotList()[index - numSlots + 1 : index + 1]
+    		for slot in slots:
+    			self.slots[slot] = something
+    	else:
+    		raise Exception("numSlots less than 1")
     	
     def checkSlot(self, slot, thing):
         if type(self.slots[slot]) == thing:
