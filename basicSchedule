@@ -1,5 +1,48 @@
 import random
 
+def buildSlotList(begin, end, contents, slotSize = 15):
+        """
+        take a beginning time and end time to create a dictionary with slots of size slotSize
+        
+        begin (int) is a 24hr 4 digit time e.g. 2359
+        end (int) is also a 24hr 4 digit time
+        contents (string) ("obj" or "list") is the type of content we intend to store in each slot
+        slotSize (int) is the length in minutes you want each time slot to be
+        """
+        slot = begin
+        #we're creating a dictionary of slots for keys and objects for values
+        #we also create a list of the slot times
+        slots = {}
+        slotList = []
+        while slot < end:
+            #we're formatting for time here
+            if slot % 100 < 60:
+                #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
+                if contents == "obj":
+                    slots[slot] = None
+                elif contents == "list":
+                    slots[slot] = []
+                else:
+                    raise Exception(contents)
+                slotList.append(slot)
+            #if the minutes is more than 60, add 40 to bring it to the next hour
+            else:
+                slot += 40
+                #if the hour adjustment brings us past the end point, exit the loop
+                if slot >= end:
+                    break
+                #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
+                if contents == "obj":
+                    slots[slot] = None
+                elif contents == "list":
+                    slots[slot] = []
+                else:
+                    raise Exception(contents)
+                slotList.append(slot)
+                #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
+            slot += slotSize
+            return slots,slotList    
+
 #Implement Employee class
 class Employee(object):
     def __init__(self, name, EOS):
@@ -52,7 +95,7 @@ class Position(object):
         e.g. East = EST, Local Control = LC
         """
         self.posID = posID
-        self.schedule = Schedule(1800,2400,"obj")
+        self.slots, self.slotList = buildSlotList(1800,2400,"obj")
         
     def __str__(self):
     	return self.posID
@@ -64,85 +107,20 @@ class Position(object):
     def assignWorker(self, slot, person, numSlots = 1):
     	"""
     	slot (int) is the slot you wish to insert worker
-    	person (object) is the person you wish to assign to the slot
-    	numSlots (int) (default 1) is the amount of slots to fill beginning with slot
-    	"""
-    	self.schedule.addSomething(slot, person)
-    	
-    def checkSlot(self, slot):
-        return self.schedule.checkSlot(slot, Employee)
-    	
-    def getSlotList(self):
-    	return self.schedule.getSlotList()
-    	
-    def getSlotSize(self):
-    	return self.schedule.getSlotSize()
-    	
-    def whoIsWorking(self, slot):
-        return self.schedule.getSlot(slot)
-        
-#create class for the schedule
-class Schedule(object):
-    def __init__(self, begin, end, contents, slotSize = 15):
-        """
-        take a beginning time and end time to create a dictionary with slots of size slotSize
-        
-        begin (int) is a 24hr 4 digit time e.g. 2359
-        end (int) is also a 24hr 4 digit time
-        contents (string) ("obj" or "list") is the type of content we intend to store in each slot
-        slotSize (int) is the length in minutes you want each time slot to be
-        """
-        self.slotSize = slotSize
-        slot = begin
-        #we're creating a dictionary of slots for keys and objects for values
-        #we also create a list of the slot times
-        self.slots = {}
-        self.slotList = []
-        while slot < end:
-            #we're formatting for time here
-            if slot % 100 < 60:
-                #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
-                if contents == "obj":
-                    self.slots[slot] = None
-                elif contents == "list":
-                    self.slots[slot] = []
-                else:
-                    raise Exception(contents)
-                self.slotList.append(slot)
-            #if the minutes is more than 60, add 40 to bring it to the next hour
-            else:
-                slot += 40
-                #if the hour adjustment brings us past the end point, exit the loop
-                if slot >= end:
-                    break
-                #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
-                if contents == "obj":
-                    self.slots[slot] = None
-                elif contents == "list":
-                    self.slots[slot] = []
-                else:
-                    raise Exception(contents)
-                self.slotList.append(slot)
-                #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
-            slot += slotSize
-            
-    def addSomething(self, slot, something, numSlots = 1):
-    	"""
-    	slot (int) is the slot you wish to insert worker
     	something (anything) is whatever you want to insert into the slot. typically an Employee object or list of Employees
     	numSlots (int) (default 1) is the amount of slots to fill beginning with slot
     	"""
     	if numSlots == 1:
-    		self.slots[slot] = something
+            self.slots[slot] = person
     	elif numSlots > 1:
-    		index = self.getSlotList().index(slot)
-    		slots = self.getSlotList()[index - numSlots + 1 : index + 1]
-    		for slot in slots:
-    			self.slots[slot] = something
+            index = self.getSlotList().index(slot)
+            slots = self.getSlotList()[index - numSlots + 1 : index + 1]
+            for slot in slots:
+                self.slots[slot] = person
     	else:
-    		raise Exception("numSlots less than 1")
-    	
-    def checkSlot(self, slot, thing):
+           raise Exception("numSlots less than 1")    	
+    	    	    	
+    def checkSlot(self, slot, thing = Employee):
         if type(self.slots[slot]) == thing:
             return True
         else:
@@ -151,14 +129,20 @@ class Schedule(object):
     def getSlotList(self):
     	return self.slotList
     	
-    def getSlot(self, slot):
-        return self.slots[slot]
-    	
     def getSlotSize(self):
     	return self.slotSize
     	
     def getNumSlots(self):
         return len(self.slots)
+    	
+    #this is redundant to "whoIsWorking"
+    def getSlot(self, slot):
+        return self.slots[slot]    	
+    
+    #this is redundant to "getSlot"		
+    def whoIsWorking(self, slot):
+        return self.getSlot(slot)
+        
 
 #implement Facility class
 class Facility(object):
@@ -280,11 +264,11 @@ class Facility(object):
 RSW = Facility("Fort Myers")
 
 RSW.addEmployee(Employee("RB", 2400))
-RSW.addEmployee(Employee("RC", 2400))
-RSW.addEmployee(Employee("MT", 2300))
-RSW.addEmployee(Employee("LB", 2130))
-RSW.addEmployee(Employee("CA", 2030))
-RSW.addEmployee(Employee("OL", 2030))
+#RSW.addEmployee(Employee("RC", 2400))
+#RSW.addEmployee(Employee("MT", 2300))
+#RSW.addEmployee(Employee("LB", 2130))
+#RSW.addEmployee(Employee("CA", 2030))
+#RSW.addEmployee(Employee("OL", 2030))
 
 RSW.addPosition(Position("A"))
 RSW.addPosition(Position("B"))
@@ -303,6 +287,8 @@ def buildSchedule(facility, standardTOP = 60, slotSize = 15, maxTOP = 105):
                 continue
             #check pool for available employees
             breakList = facility.onBreak.getSlot(slot)
+            ######################TEST CODE
+            print breakList
             #if none and it's the first slot
             if len(breakList) < 1 and slot == facility.getSlotList()[-1]:
                 #throw exception
@@ -334,3 +320,42 @@ def buildSchedule(facility, standardTOP = 60, slotSize = 15, maxTOP = 105):
 		#assign employee to the slot
 		
 #build schedule table to print
+import pandas
+
+"""
+Here's the format we're looking for
+
+	POS	POS
+SLOT	RB	MT
+SLOT	RB	MT
+SLOT	RB	MT
+SLOT	RB	MT
+
+So first column will be the slots
+the rest of the columns will be employee's initials assigned to the postion found at the top of the column
+
+each column needs to be formatted into a dictionary
+the heading is the key and the rest are values
+the slot times need to be in a list
+"""
+
+def displaySchedule(facility):
+    #initialize dictionary of position assignments
+    posAssignments = {}
+    #iterate over every position in the facility
+    for pos in facility.getPositionList():
+       	#create empty list for this position to fill
+       	posAssignments[pos.getPosID()] = []
+	#iterate over every slot
+	for slot in facility.getSlotList():
+	   #fetch employee working this slot
+	   employee = pos.whoIsWorking(slot)
+	   #if employee is indeed an employee...
+	   if type(employee) == Employee:
+	       #get the initials of the person working for each slot for each position
+	       posAssignments[pos.getPosID()].append(employee.getInitials())
+	   #...otherwise add "" to the posAssignment for whitespace
+	   else:
+	       posAssignments[pos.getPosID()].append("")
+    #use the pandas DataFrame method to create readable tabulated lists for print
+    print pandas.DataFrame(posAssignments, index=facility.getSlotList())
