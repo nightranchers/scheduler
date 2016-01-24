@@ -1,29 +1,19 @@
 import random
 
-def buildSlotList(begin, end, contents, slotSize = 15):
+def buildSlotList(begin, end, slotSize):
         """
         take a beginning time and end time to create a dictionary with slots of size slotSize
         
         begin (int) is a 24hr 4 digit time e.g. 2359
         end (int) is also a 24hr 4 digit time
-        contents (string) ("obj" or "list") is the type of content we intend to store in each slot
         slotSize (int) is the length in minutes you want each time slot to be
         """
         slot = begin
-        #we're creating a dictionary of slots for keys and objects for values
         #we also create a list of the slot times
-        slots = {}
         slotList = []
         while slot < end:
             #we're formatting for time here
             if slot % 100 < 60:
-                #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
-                if contents == "obj":
-                    slots[slot] = None
-                elif contents == "list":
-                    slots[slot] = []
-                else:
-                    raise Exception(contents)
                 slotList.append(slot)
             #if the minutes is more than 60, add 40 to bring it to the next hour
             else:
@@ -31,17 +21,27 @@ def buildSlotList(begin, end, contents, slotSize = 15):
                 #if the hour adjustment brings us past the end point, exit the loop
                 if slot >= end:
                     break
-                #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
-                if contents == "obj":
-                    slots[slot] = None
-                elif contents == "list":
-                    slots[slot] = []
-                else:
-                    raise Exception(contents)
                 slotList.append(slot)
-                #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
             slot += slotSize
-            return slots,slotList    
+            return slotList
+            
+def buildSlots(slotList, contents):
+    """
+    take a slot list and return a dictionary of empty slot values ready for the user to fill
+    
+    slotList (list) is a list of slots previously created. we will iterate over this list to fill the slots
+    contents (string) ("obj" or "list") is the type of content we intend to store in each slot
+    """
+    slots = {}
+    for slot in slotList:
+        #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
+        if contents == "obj":
+            slots[slot] = None
+        elif contents == "list":
+            slots[slot] = []
+        else:
+            raise Exception(contents)
+    return slots
 
 #Implement Employee class
 class Employee(object):
@@ -86,16 +86,19 @@ class Employee(object):
 
 #we can create an object class for each position so we can save its attributes
 class Position(object):
-    def __init__(self, posID = 'ID'):
+    def __init__(self, posID, slotSize):
         """
         initialize Position object
         we can create one of these for each position we want to schedule
         
         posID (str) is the coded id of the position
         e.g. East = EST, Local Control = LC
+        slotSize (int) is the length of slot size we desire for the position
         """
         self.posID = posID
-        self.slots, self.slotList = buildSlotList(1800,2400,"obj")
+        self.slotSize = slotSize
+        self.slotList = buildSlotList(1800,2400, self.slotSize)
+        self.slots = buildSlots(self.slotList, "obj")
         
     def __str__(self):
     	return self.posID
@@ -133,7 +136,7 @@ class Position(object):
     	return self.slotSize
     	
     def getNumSlots(self):
-        return len(self.slots)
+        return len(self.slotList)
     	
     #this is redundant to "whoIsWorking"
     def getSlot(self, slot):
@@ -173,29 +176,34 @@ class Facility(object):
     	self.employeeList = []
     	self.employees = {}
     	
-    	#create dictionary of lists of employees on break (Schedule object) 
-    	#create dictionary of lists of employees on position (Schedule object)
-        self.onBreak = Schedule(self.start,self.end, "list")
-        self.onPos = Schedule(self.start,self.end, "list")
+    	#create list of slots for facility
+    	#create dictionary of lists of employees on break
+    	#create dictionary of lists of employees on position
+    	self.slotList = buildSlotList(self.start, self.end, 15)
+        self.onBreak = buildSlots(self.slotList, "list")
+        self.onPos = buildSlots(self.slotList, "list")
     
     def addPosition(self, pos):
         self.positionList.append(pos)
         self.positions[pos.getPosID()] = pos
-		
+        
     def addEmployee(self, person):
         self.employeeList.append(person)
         self.employees[person.getInitials()] = person
         
     def getNumSlots(self):
-        return self.onBreak.getNumSlots()
+        return len(self.slotList)
         
     def getSlotList(self):
-        return self.onBreak.getSlotList()
+        return self.slotList
         
     def getPositionList(self):
         return self.positionList
         
     def buildBreakList(self):
+        #we need to check if the breakList is empty first time through
+        firstWalkThrough = True
+        
         #iterate through every employee
         for employee in self.employeeList:
             ######################### TEST CODE
@@ -203,33 +211,47 @@ class Facility(object):
             #if the employee is a closer
             if employee.getEOS() == self.end:
                 #start him at the beginning and fill every slot until close
-                for slot in self.onBreak.getSlotList():
+                for slot in self.getSlotList():
                     ######################### TEST CODE
                     print slot
+                    
+                    #check if it's our first time checking this slot and if it's empty
+                    if firstWalkThrough and slot:
+                        #if not empty, raise error
+                        raise Exception("onBreak not empty before populating list in slot: " + str(slot))          
+                    
+                    #WE CONSOLIDATED THE FOLLOWING CODE TO ONE LINE FOR NOW. CANT SEE A REASON TO MAKE A COPY YET
                     #retrieve slot contents, add the employee to the break list, send it back
-                    breakList = self.onBreak.getSlot(slot)[:]
-                    breakList.append(employee)
-                    self.onBreak.addSomething(slot, breakList)
+                    #breakList = self.onBreak[slot][:]
+                    #breakList.append(employee)
+                    #self.onBreak[slot] = breakList
+                    
+                    #add the employee to the break list
+                    self.onBreak[slot].append(employee)                    
             #if the employee is not a closer
             elif employee.getEOS() < self.end:
                 #iterate over every slot
-                for slot in self.onBreak.getSlotList():
+                for slot in self.getSlotList():
                     ######################### TEST CODE
                     print slot
+                    
+                    #check if it's our first time checking this slot and if it's empty
+                    if firstWalkThrough and slot:
+                        #if not empty, raise error
+                        raise Exception("onBreak not empty before populating list in slot: " + str(slot))
+                    
                     #assign employee to break list while the slot is less than the employees end of shift
                     if slot < employee.getEOS():
-                        #retrieve slot contents, add the employee to the break list, send it back
-                        breakList = self.onBreak.getSlot(slot)[:]
-                        breakList.append(employee)
-                        self.onBreak.addSomething(slot, breakList)
-                        #we tried consolidating to one line of code but was unsuccessful
-                        #self.onBreak.addSomething(slot, self.onBreak.getSlot(slot)[:].append(employee))
+                        #add the employee to the break list
+                        self.onBreak[slot].append(employee)
                     #once we get to the employees End Of Shift, stopp adding to break list
                     else:
                         break
             #otherwise the employees End Of Shift is outside the parameters
             else:
                 raise Exception("Employee EOF outside parameters")
+            #we made it though all slots without seeing an anomaly. set flag to false to stop checking
+            firstWalkThrough = False
                         
                     
             
@@ -270,8 +292,8 @@ RSW.addEmployee(Employee("RB", 2400))
 #RSW.addEmployee(Employee("CA", 2030))
 #RSW.addEmployee(Employee("OL", 2030))
 
-RSW.addPosition(Position("A"))
-RSW.addPosition(Position("B"))
+RSW.addPosition(Position("A", 15))
+RSW.addPosition(Position("B", 15))
 
 #scheduler builder function (facility object with employees and positions, standardTOP = 4 slots (60 minutes)):
 def buildSchedule(facility, standardTOP = 60, slotSize = 15, maxTOP = 105):
