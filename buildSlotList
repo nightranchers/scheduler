@@ -1,4 +1,4 @@
-def __init__(self, begin, end, contents, slotSize = 15):
+def buildSlotList(begin, end, contents, slotSize = 15):
         """
         take a beginning time and end time to create a dictionary with slots of size slotSize
         
@@ -7,23 +7,22 @@ def __init__(self, begin, end, contents, slotSize = 15):
         contents (string) ("obj" or "list") is the type of content we intend to store in each slot
         slotSize (int) is the length in minutes you want each time slot to be
         """
-        self.slotSize = slotSize
         slot = begin
         #we're creating a dictionary of slots for keys and objects for values
         #we also create a list of the slot times
-        self.slots = {}
-        self.slotList = []
+        slots = {}
+        slotList = []
         while slot < end:
             #we're formatting for time here
             if slot % 100 < 60:
                 #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
                 if contents == "obj":
-                    self.slots[slot] = None
+                    slots[slot] = None
                 elif contents == "list":
-                    self.slots[slot] = []
+                    slots[slot] = []
                 else:
                     raise Exception(contents)
-                self.slotList.append(slot)
+                slotList.append(slot)
             #if the minutes is more than 60, add 40 to bring it to the next hour
             else:
                 slot += 40
@@ -32,11 +31,12 @@ def __init__(self, begin, end, contents, slotSize = 15):
                     break
                 #slots will be filled with a Position object, a list of Employee objects, or a single Employee object
                 if contents == "obj":
-                    self.slots[slot] = None
+                    slots[slot] = None
                 elif contents == "list":
-                    self.slots[slot] = []
+                    slots[slot] = []
                 else:
                     raise Exception(contents)
-                self.slotList.append(slot)
+                slotList.append(slot)
                 #slots with be filled with a Position object, a list of Employee objects, or a single Employee object
             slot += slotSize
+            return slots,slotList
