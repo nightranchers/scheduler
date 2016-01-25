@@ -59,6 +59,8 @@ class Employee(object):
         self.lastPosition = None
         #TOP is Time On Position. Not to exceed user defined MaxTOP
         self.TOP = 0
+        #TOB is Time On Break. Used to decide who gets called onto position
+        self.TOB = 0
 
     def __str__(self):
         return self.name
@@ -75,14 +77,23 @@ class Employee(object):
     def setLastPos(self, lastPos):
         self.lastPosition = lastPos
         
-    def setTOPplus1(self, slotSize):
-        self.TOP += slotSize
+    def setTOPplus1(self):
+        self.TOP += 1
         
     def resetTOP(self):
         self.TOP = 0
         
     def getTOP(self):
         return self.TOP
+        
+    def setTOBplus1(self):
+        self.TOB += 1
+        
+    def resetTOB(self):
+        self.TOB = 0
+        
+    def getTBP(self):
+        return self.TOB        
 
 #we can create an object class for each position so we can save its attributes
 class Position(object):
@@ -115,11 +126,13 @@ class Position(object):
     	"""
     	if numSlots == 1:
             self.slots[slot] = person
+            person.setTOPplus1() #this adds to the person's time on position so we can see if he's been on too long
     	elif numSlots > 1:
             index = self.getSlotList().index(slot)
             slots = self.getSlotList()[index - numSlots + 1 : index + 1]
             for slot in slots:
                 self.slots[slot] = person
+                person.setTOPplus1() #this adds to the person's time on position so we can see if he's been on too long
     	else:
            raise Exception("numSlots less than 1")    	
     	    	    	
@@ -149,7 +162,7 @@ class Position(object):
 
 #implement Facility class
 class Facility(object):
-    def __init__(self, name, start=1800, end=2400, maxTOP = 105):
+    def __init__(self, name, start=1800, end=2400, maxTOP = 105, slotSize = 15):
 	"""
 	initialize values for Facility object
 	here we set the facility parameters that will be used when making the schedule
@@ -159,12 +172,14 @@ class Facility(object):
         optional parameters...
         start (int): this is the 24hr local time we want to begin creating the schedule
         end (int): this is the 24hr local time we want to stop creating the schedule
-        maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes)
+        maxTOP (int): we can set max time on position (maxTOP) to 1:45 (or 105 minutes) or 7 slots (105/15)
+        slotSize (int): this is the size of the slots we wish to use. defaults to 15 minutes.
     	"""
 	self.name = name
 	self.start = start
 	self.end = end
-        self.maxTOP = maxTOP
+        self.maxTOP /= slotSize
+        self.slotSize = slotSize
 	
     	#positionList (list) of (Position) objects in facility
     	#postions (dict) of posID's for keys assigned to (Position) values
@@ -179,7 +194,7 @@ class Facility(object):
     	#create list of slots for facility
     	#create dictionary of lists of employees on break
     	#create dictionary of lists of employees on position
-    	self.slotList = buildSlotList(self.start, self.end, 15)
+    	self.slotList = buildSlotList(self.start, self.end, slotSize)
         self.onBreak = buildSlots(self.slotList, "list")
         self.onPos = buildSlots(self.slotList, "list")
     
@@ -197,8 +212,17 @@ class Facility(object):
     def getSlotList(self):
         return self.slotList
         
+    def getSlotSize(self):
+        return self.slotSize
+        
+    def getMaxTOP(self):
+        return self.maxTOP
+        
     def getPositionList(self):
         return self.positionList
+        
+    def removeFromBreakList(self, person, slot):
+        self.onBreak[slot].remove(person)
         
     def buildBreakList(self):
         #we need to check if the breakList is empty first time through
@@ -270,14 +294,12 @@ class Facility(object):
 	pos = random.choice(options)
 	
 	#start assigning worker to position
-	TOP = 0
+        lucky.resetTOP()
 	slotList = pos.getSlotList()[:]
-	while TOP < self.maxTOP:
+	while lucky.getTOP < self.maxTOP:
             pos.assignWorker(slotList.pop(),lucky)
-            TOP += pos.getSlotSize()
-            lucky.setTOPplus1(pos.getSlotSize())
+            lucky.setTOPplus1()
         lucky.setLastPos(pos)
-        lucky.TOP
         print lucky ##### TEST CODE. REMOVE FOR PRODUCTION #####
         print pos ##### TEST CODE. REMOVE FOR PRODUCTION #####
         
@@ -296,7 +318,9 @@ RSW.addPosition(Position("A", 15))
 RSW.addPosition(Position("B", 15))
 
 #scheduler builder function (facility object with employees and positions, standardTOP = 4 slots (60 minutes)):
-def buildSchedule(facility, standardTOP = 60, slotSize = 15, maxTOP = 105):
+def buildSchedule(facility, standardTOP = 60):
+    #set standardTOP to number of actual slots and not minutes
+    standardTOP /= facility.getSlotSize()
     #loop through x number slots starting with closing slot
     slotList = facility.getSlotList()[:]
     slotList.reverse()
@@ -321,20 +345,55 @@ def buildSchedule(facility, standardTOP = 60, slotSize = 15, maxTOP = 105):
 	        #get the index of the current slot, add 1, then retrieve that slot from the slot list
 	        employee = pos.whoIsWorking(pos.getSlotList()[pos.getSlotList().index(slot) + 1])
 	        #if employee is already at maxTOP throw exception
-                if employee.getTOP() >= maxTOP:
+                if employee.getTOP() >= facility.getMaxTOP():
                     raise Exception(employee.getInitials() + " has reached max Time On Position (maxTOP)")
                 #else extend assigned employee one slot
-                    #try
-                        #SAF(schedule, employee, starting slot, 1 slot)
-                #elif one
-                    #try
-                        #SAF(schedule, employee, starting slot, standardTOP) 
-		#elif more than one, check to see who hasn't worked
-                    #if one hasn't worked, assign him to the slot
-                    #elif more than one hasn't worked, pick one and assign him to the slot
-                    #else everyone's worked, check who's been on break the longest
-                        #if one, assign that person to the slot
-                        #if more than one are tied for longest, pick one and assign that person to the slot
+                else:
+                    #...assign him to the slot
+                    pos.assignWorker(slot, employee) #one slot is implied
+            #elif one
+            #########################################
+            ######################################### WORK ON THIS!
+            elif len(breakList) == 1:
+                #fetch the employee
+                employee = breakList[0]
+                #SAF(schedule, employee, starting slot, standardTOP) 
+                pos.assignWorker(slot, employee, standardTOP)
+                #...set their last position
+                employee.setLastPos(pos)
+                #..increase their TOP
+                employee.setTOPplus1()
+                #...remove from breakList
+                facility.removeFromBreakList(employee, slot)
+            ##########################################
+            ##########################################
+	    #elif more than one...
+	    elif len(breakList) > 1:
+	        #iterate over everyone on break
+	        #and keep track of who's been on break the longest
+	        longestTOB = 0
+	        lucky = None
+	        for employee in breakList:
+                    #check to see if anyone hasn't worked
+	            #if we find one who hasn't worked...
+	            if employee.getLastPos() == None:
+	                #...assign him to the slot
+	                pos.assignWorker(slot, employee, standardTOP)
+	                #...set their last position
+	                employee.setLastPos(pos)
+                        #...remove from breakList
+                        facility.removeFromBreakList(employee, slot)	               
+	                #...and move on to the next positioin
+	                break
+	            #this person has worked before, so see if they've been on break the longest
+	            if employee.getTOB() > longestTOB:
+	                #if yes, make them the new lucky victim
+	                lucky = employee
+                #else everyone's worked, check who's been on break the longest. A tie will just go to the first person we checked
+                #assign that person to the position
+                pos.assignWorker(slot, lucky, standardTOP)                
+                #...set their last position
+                employee.setLastPos(pos)
 
 #SAF "slot assignment function" (schedule object, employee object, starting slot, numSlots):
 	#loop through schedule object slots beginning with starting slot for numSlots 
