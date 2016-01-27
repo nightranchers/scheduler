@@ -1,0 +1,93 @@
+#scheduler builder function (facility object with employees and positions, standardTOP = 4 slots (60 minutes)):
+def buildSchedule(facility, standardTOP = 60):
+    #set standardTOP to number of actual slots and not minutes
+    standardTOP /= facility.getSlotSize()
+    
+    def assignWorker():
+        """
+        internal function we'll call multiple times when we're adding an employee to a position.
+        this is everything that happens when we assign an employee.
+        """
+        #...assign him to the slot
+	pos.assignWorker(slot, employee, standardTOP)
+	#...set their last position
+	employee.setLastPos(pos)
+        #..increase their TOP
+        employee.increaseTOP(standardTOP)
+        #...reset TOB counter
+        employee.resetTOB()
+        #...remove from breakList
+        facility.removeFromBreakList(employee, slot)  
+                
+    
+    #loop through x number slots starting with closing slot
+    slotList = facility.getSlotList()[:]
+    slotList.reverse()
+    for slot in slotList:
+        #when standardTOP becomes less than slots available, reduce standardTOP by 1
+	#loop through each position
+        for pos in facility.getPositionList():
+            #if slot for position is already set, skip
+            if pos.checkSlot(slot):
+                continue
+            #check pool for available employees
+            breakList = facility.onBreak.getSlot(slot)
+            ######################TEST CODE
+            print breakList
+            #if none and it's the first slot
+            if len(breakList) < 1 and slot == facility.getSlotList()[-1]:
+                #throw exception
+                raise Exception("Not enough employees available to close")
+	    #if none
+	    elif len(breakList) < 1:
+	        #we need to extend the employee on position
+	        #get the index of the current slot, add 1, then retrieve that slot from the slot list
+	        employee = pos.whoIsWorking(pos.getSlotList()[pos.getSlotList().index(slot) + 1])
+	        #if employee is already at maxTOP throw exception
+                if employee.getTOP() >= facility.getMaxTOP():
+                    raise Exception(employee.getInitials() + " has reached max Time On Position (maxTOP)")
+                #else extend assigned employee one slot
+                else:
+                    #...assign him to the slot
+                    pos.assignWorker(slot, employee) #one slot is implied
+                    #..increase their TOP
+                    employee.increaseTOP()	                
+	            #...remove from breakList
+        	    facility.removeFromBreakList(employee, slot)                     
+            #elif one
+            #########################################
+            ######################################### WORK ON THIS!
+            elif len(breakList) == 1:
+                #fetch the employee
+                employee = breakList[0]
+                #call assignWorker function
+                assignWorker()
+            ##########################################
+            ##########################################
+	    #elif more than one...
+	    elif len(breakList) > 1:
+	        #iterate over everyone on break
+	        #and keep track of who's been on break the longest
+	        longestTOB = 0
+	        lucky = None
+	        for employee in breakList:
+                    #check to see if anyone hasn't worked
+	            #if we find one who hasn't worked...
+	            if employee.getLastPos() == None:
+                        #call assignWorker function
+                        assignWorker()	               
+	                #...and move on to the next positioin
+	                break
+	            #since we got this far, this person has worked before. See if they've been on break the longest
+	            if employee.getTOB() > longestTOB:
+	                #if yes, make them the new lucky victim
+	                lucky = employee
+                #else everyone's worked, check who's been on break the longest. A tie will just go to the first person we checked
+                #switch back to employee so we can use assignWorker function
+                employee = lucky
+                #assign that person to the position
+                assignWorker()
+        #after going through all positions, check who's left on break and add one to their TOB counter
+        breakList = facility.onBreak.getSlot(slot)
+        for employee in breakList:
+            employee.setTOBplus1()
