@@ -1,9 +1,10 @@
+#build schedule table to print
 import pandas
 
 """
 Here's the format we're looking for
 
-		POS	POS
+	POS	POS
 SLOT	RB	MT
 SLOT	RB	MT
 SLOT	RB	MT
@@ -17,15 +18,23 @@ the heading is the key and the rest are values
 the slot times need to be in a list
 """
 
-#initialize dictionary of position assignments
-posAssignments = {}
-#iterate over every position in the facility
-for pos in facility.getPositionList():
-	#create empty list for this position to fill
-	posAssignments[pos.getPosID()] = []
+def displaySchedule(facility):
+    #initialize dictionary of position assignments
+    posAssignments = {}
+    #iterate over every position in the facility
+    for pos in facility.getPositionList():
+       	#create empty list for this position to fill
+       	posAssignments[pos.getPosID()] = []
 	#iterate over every slot
 	for slot in facility.getSlotList():
-		#get the initials of the person working for each slot for each position
-		posAssignments[pos.getPosID()].append(pos.whoIsWorking(slot).getInitials())
-#use the pandas DataFrame method to create readable tabulated lists for print
-pandas.DataFrame(posAssignments, index=facility.getSlotList())
+	   #fetch employee working this slot
+	   employee = pos.whoIsWorking(slot)
+	   #if employee is indeed an employee...
+	   if type(employee) == Employee:
+	       #get the initials of the person working for each slot for each position
+	       posAssignments[pos.getPosID()].append(employee.getInitials())
+	   #...otherwise add "" to the posAssignment for whitespace
+	   else:
+	       posAssignments[pos.getPosID()].append("")
+    #use the pandas DataFrame method to create readable tabulated lists for print
+    print pandas.DataFrame(posAssignments, index=facility.getSlotList())
