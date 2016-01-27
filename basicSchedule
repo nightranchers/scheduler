@@ -77,8 +77,8 @@ class Employee(object):
     def setLastPos(self, lastPos):
         self.lastPosition = lastPos
         
-    def setTOPplus1(self):
-        self.TOP += 1
+    def increaseTOP(self, slots = 1):
+        self.TOP += slots
         
     def resetTOP(self):
         self.TOP = 0
@@ -92,8 +92,8 @@ class Employee(object):
     def resetTOB(self):
         self.TOB = 0
         
-    def getTBP(self):
-        return self.TOB        
+    def getTOB(self):
+        return self.TOB       
 
 #we can create an object class for each position so we can save its attributes
 class Position(object):
@@ -126,13 +126,13 @@ class Position(object):
     	"""
     	if numSlots == 1:
             self.slots[slot] = person
-            person.setTOPplus1() #this adds to the person's time on position so we can see if he's been on too long
+            person.increaseTOP() #this adds to the person's time on position so we can see if he's been on too long
     	elif numSlots > 1:
             index = self.getSlotList().index(slot)
             slots = self.getSlotList()[index - numSlots + 1 : index + 1]
             for slot in slots:
                 self.slots[slot] = person
-                person.setTOPplus1() #this adds to the person's time on position so we can see if he's been on too long
+                person.increaseTOP() #this adds to the person's time on position so we can see if he's been on too long
     	else:
            raise Exception("numSlots less than 1")    	
     	    	    	
@@ -178,7 +178,7 @@ class Facility(object):
 	self.name = name
 	self.start = start
 	self.end = end
-        self.maxTOP /= slotSize
+        self.maxTOP = maxTOP / slotSize
         self.slotSize = slotSize
 	
     	#positionList (list) of (Position) objects in facility
@@ -240,7 +240,7 @@ class Facility(object):
                     print slot
                     
                     #check if it's our first time checking this slot and if it's empty
-                    if firstWalkThrough and slot:
+                    if firstWalkThrough and self.onBreak[slot]:
                         #if not empty, raise error
                         raise Exception("onBreak not empty before populating list in slot: " + str(slot))          
                     
@@ -260,7 +260,7 @@ class Facility(object):
                     print slot
                     
                     #check if it's our first time checking this slot and if it's empty
-                    if firstWalkThrough and slot:
+                    if firstWalkThrough and self.onBreak[slot]:
                         #if not empty, raise error
                         raise Exception("onBreak not empty before populating list in slot: " + str(slot))
                     
@@ -268,7 +268,7 @@ class Facility(object):
                     if slot < employee.getEOS():
                         #add the employee to the break list
                         self.onBreak[slot].append(employee)
-                    #once we get to the employees End Of Shift, stopp adding to break list
+                    #once we get to the employees End Of Shift, stop adding to break list
                     else:
                         break
             #otherwise the employees End Of Shift is outside the parameters
@@ -298,7 +298,7 @@ class Facility(object):
 	slotList = pos.getSlotList()[:]
 	while lucky.getTOP < self.maxTOP:
             pos.assignWorker(slotList.pop(),lucky)
-            lucky.setTOPplus1()
+            lucky.increaseTOP()
         lucky.setLastPos(pos)
         print lucky ##### TEST CODE. REMOVE FOR PRODUCTION #####
         print pos ##### TEST CODE. REMOVE FOR PRODUCTION #####
@@ -308,11 +308,11 @@ class Facility(object):
 RSW = Facility("Fort Myers")
 
 RSW.addEmployee(Employee("RB", 2400))
-#RSW.addEmployee(Employee("RC", 2400))
-#RSW.addEmployee(Employee("MT", 2300))
-#RSW.addEmployee(Employee("LB", 2130))
-#RSW.addEmployee(Employee("CA", 2030))
-#RSW.addEmployee(Employee("OL", 2030))
+RSW.addEmployee(Employee("RC", 2400))
+RSW.addEmployee(Employee("MT", 2300))
+RSW.addEmployee(Employee("LB", 2130))
+RSW.addEmployee(Employee("CA", 2030))
+RSW.addEmployee(Employee("OL", 2030))
 
 RSW.addPosition(Position("A", 15))
 RSW.addPosition(Position("B", 15))
@@ -321,6 +321,22 @@ RSW.addPosition(Position("B", 15))
 def buildSchedule(facility, standardTOP = 60):
     #set standardTOP to number of actual slots and not minutes
     standardTOP /= facility.getSlotSize()
+    
+    def assignWorker():
+        """
+        internal function we'll call multiple times when we're adding an employee to a position
+        """
+        #...assign him to the slot
+	pos.assignWorker(slot, employee, standardTOP)
+	#...set their last position
+	employee.setLastPos(pos)
+        #..increase their TOP
+        employee.increaseTOP(standardTOP)
+        #...reset TOB counter
+        employee.resetTOB()        	                
+        #...remove from breakList
+        facility.removeFromBreakList(employee, slot)          
+    
     #loop through x number slots starting with closing slot
     slotList = facility.getSlotList()[:]
     slotList.reverse()
@@ -351,20 +367,18 @@ def buildSchedule(facility, standardTOP = 60):
                 else:
                     #...assign him to the slot
                     pos.assignWorker(slot, employee) #one slot is implied
+                    #..increase their TOP
+                    employee.increaseTOP()	                
+	            #...remove from breakList
+        	    facility.removeFromBreakList(employee, slot)                     
             #elif one
             #########################################
             ######################################### WORK ON THIS!
             elif len(breakList) == 1:
                 #fetch the employee
                 employee = breakList[0]
-                #SAF(schedule, employee, starting slot, standardTOP) 
-                pos.assignWorker(slot, employee, standardTOP)
-                #...set their last position
-                employee.setLastPos(pos)
-                #..increase their TOP
-                employee.setTOPplus1()
-                #...remove from breakList
-                facility.removeFromBreakList(employee, slot)
+                #call assignWorker function
+                assignWorker()
             ##########################################
             ##########################################
 	    #elif more than one...
@@ -377,28 +391,24 @@ def buildSchedule(facility, standardTOP = 60):
                     #check to see if anyone hasn't worked
 	            #if we find one who hasn't worked...
 	            if employee.getLastPos() == None:
-	                #...assign him to the slot
-	                pos.assignWorker(slot, employee, standardTOP)
-	                #...set their last position
-	                employee.setLastPos(pos)
-                        #...remove from breakList
-                        facility.removeFromBreakList(employee, slot)	               
+                        #call assignWorker function
+                        assignWorker()	               
 	                #...and move on to the next positioin
 	                break
-	            #this person has worked before, so see if they've been on break the longest
+	            #since we got this far, this person has worked before. See if they've been on break the longest
 	            if employee.getTOB() > longestTOB:
 	                #if yes, make them the new lucky victim
 	                lucky = employee
                 #else everyone's worked, check who's been on break the longest. A tie will just go to the first person we checked
+                #switch back to employee so we can use assignWorker function
+                employee = lucky
                 #assign that person to the position
-                pos.assignWorker(slot, lucky, standardTOP)                
-                #...set their last position
-                employee.setLastPos(pos)
+                assignWorker()
+        #after going through all positions, check who's left on break and add one to their TOB counter
+        breakList = facility.onBreak.getSlot(slot)
+        for employee in breakList:
+            employee.setTOBplus1()
 
-#SAF "slot assignment function" (schedule object, employee object, starting slot, numSlots):
-	#loop through schedule object slots beginning with starting slot for numSlots 
-		#check that this slot exists and is unoccupied else throw exception
-		#assign employee to the slot
 		
 #build schedule table to print
 import pandas
@@ -440,3 +450,17 @@ def displaySchedule(facility):
 	       posAssignments[pos.getPosID()].append("")
     #use the pandas DataFrame method to create readable tabulated lists for print
     print pandas.DataFrame(posAssignments, index=facility.getSlotList())
+    
+#test code for Scheduler
+
+#1. Call basicSchedule
+#from basicSchedule0.22 import *
+#
+#2. Build Break List
+RSW.buildBreakList()
+#
+#3. Build Schedule
+#buildSchedule(RSW)
+#
+#4. Display Schedule
+#displaySchedule(RSW)
