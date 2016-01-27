@@ -1,0 +1,51 @@
+#Implement Employee class
+class Employee(object):
+    def __init__(self, name, EOS):
+        """
+        initialize values for Employee
+        
+        name (str) is name of employee
+        EOS (int) is employees End Of Shift time in 24hr local time (eg.2330)
+        """
+        self.name = name
+        self.initials = name ##### WERE DOING THIS FOR SIMPLICITY's SAKE!!! CHANGE LATER!!! #####
+        self.EOS = EOS
+        #we'll keep track of the last position employee worked to try and keep variety
+        self.lastPosition = None
+        #TOP is Time On Position. Not to exceed user defined MaxTOP
+        self.TOP = 0
+        #TOB is Time On Break. Used to decide who gets called onto position
+        self.TOB = 0
+
+    def __str__(self):
+        return self.name
+        
+    def getInitials(self):
+        return self.initials
+        
+    def getEOS(self):
+        return self.EOS
+		
+    def getLastPos(self):
+        return self.lastPosition
+        
+    def setLastPos(self, lastPos):
+        self.lastPosition = lastPos
+        
+    def increaseTOP(self, slots = 1):
+        self.TOP += slots
+        
+    def resetTOP(self):
+        self.TOP = 0
+        
+    def getTOP(self):
+        return self.TOP
+        
+    def setTOBplus1(self):
+        self.TOB += 1
+        
+    def resetTOB(self):
+        self.TOB = 0
+        
+    def getTOB(self):
+        return self.TOB   
