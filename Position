@@ -1,0 +1,63 @@
+#we can create an object class for each position so we can save its attributes
+class Position(object):
+    def __init__(self, posID, slotSize):
+        """
+        initialize Position object
+        we can create one of these for each position we want to schedule
+        
+        posID (str) is the coded id of the position
+        e.g. East = EST, Local Control = LC
+        slotSize (int) is the length of slot size we desire for the position
+        """
+        self.posID = posID
+        self.slotSize = slotSize
+        self.slotList = buildSlotList(1800,2400, self.slotSize)
+        self.slots = buildSlots(self.slotList, "obj")
+        
+    def __str__(self):
+    	return self.posID
+    	
+    def getPosID(self):
+        return self.posID
+    	
+    ##### WORK IN PROGRESS #####
+    def assignWorker(self, slot, person, numSlots = 1):
+    	"""
+    	slot (int) is the slot you wish to insert worker
+    	something (anything) is whatever you want to insert into the slot. typically an Employee object or list of Employees
+    	numSlots (int) (default 1) is the amount of slots to fill beginning with slot
+    	"""
+    	if numSlots == 1:
+            self.slots[slot] = person
+            person.increaseTOP() #this adds to the person's time on position so we can see if he's been on too long
+    	elif numSlots > 1:
+            index = self.getSlotList().index(slot)
+            slots = self.getSlotList()[index - numSlots + 1 : index + 1]
+            for slot in slots:
+                self.slots[slot] = person
+                person.increaseTOP() #this adds to the person's time on position so we can see if he's been on too long
+    	else:
+           raise Exception("numSlots less than 1")    	
+    	    	    	
+    def checkSlot(self, slot, thing = Employee):
+        if type(self.slots[slot]) == thing:
+            return True
+        else:
+            return False
+    	
+    def getSlotList(self):
+    	return self.slotList
+    	
+    def getSlotSize(self):
+    	return self.slotSize
+    	
+    def getNumSlots(self):
+        return len(self.slotList)
+    	
+    #this is redundant to "whoIsWorking"
+    def getSlot(self, slot):
+        return self.slots[slot]    	
+    
+    #this is redundant to "getSlot"		
+    def whoIsWorking(self, slot):
+        return self.getSlot(slot)
