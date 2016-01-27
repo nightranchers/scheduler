@@ -78,7 +78,7 @@ class Facility(object):
                     print slot
                     
                     #check if it's our first time checking this slot and if it's empty
-                    if firstWalkThrough and slot:
+                    if firstWalkThrough and self.onBreak[slot]:
                         #if not empty, raise error
                         raise Exception("onBreak not empty before populating list in slot: " + str(slot))          
                     
@@ -98,7 +98,7 @@ class Facility(object):
                     print slot
                     
                     #check if it's our first time checking this slot and if it's empty
-                    if firstWalkThrough and slot:
+                    if firstWalkThrough and self.onBreak[slot]:
                         #if not empty, raise error
                         raise Exception("onBreak not empty before populating list in slot: " + str(slot))
                     
